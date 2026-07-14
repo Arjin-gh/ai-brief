@@ -1,0 +1,45 @@
+# === 敏感文件 ===
+.env
+.env.*
+!.env.example
+*.secret
+*.key
+*.pem
+credentials*
+cookies*
+*_credentials.json
+service-account*.json
+
+# === LLM / parse 缓存与工作目录（含真实项目数据） ===
+work/
+cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# === 输出产物（含用户真实项目内容，不进版本控制） ===
+# 保留 output/ 目录本身，靠 .gitkeep 占位；产物一律忽略。
+output/*
+!output/.gitkeep
+
+# === 编辑器 / 系统 ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Claude Code / Agent 本地状态（含用户名 + 授权历史） ===
+.claude/
+.codex/
+.cursor/
+
+# === Python 打包 / 虚拟环境（万一有人 pip install -e . 之后 push）===
+*.egg-info/
+build/
+dist/
+venv/
+.venv/
+env/

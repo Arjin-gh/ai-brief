@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ai-brief · brief.json",
+  "description": "Intermediate JSON that an agent produces and render_report.py consumes.",
+  "type": "object",
+  "required": ["period", "projects", "articles"],
+  "properties": {
+    "period": {
+      "type": "object",
+      "required": ["start", "end", "type"],
+      "properties": {
+        "start": {"type": "string"},
+        "end":   {"type": "string"},
+        "type":  {"type": "string", "enum": ["weekly", "monthly", "custom"]}
+      }
+    },
+    "canonical": {
+      "type": "array",
+      "description": "Mandatory-floor source fetch log (retirement calendars, whitelist, etc.). See SKILL.md §3.1.",
+      "items": {
+        "type": "object",
+        "required": ["label", "status"],
+        "properties": {
+          "label":  {"type": "string", "description": "Human-readable source name in Chinese"},
+          "status": {"type": "string", "enum": ["found", "empty", "skipped", "error"]},
+          "n":      {"type": "integer", "minimum": 0},
+          "note":   {"type": ["string", "null"],
+                     "description": "Required when status != found. Explain why."}
+        }
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "description": "8-axis free-search coverage log (dims A–H). See SKILL.md §3.2.",
+      "items": {
+        "type": "object",
+        "required": ["dim", "label", "status"],
+        "properties": {
+          "dim":    {"type": "string", "pattern": "^[A-H]$",
+                     "description": "Single letter A–H per SKILL.md §3.2"},
+          "label":  {"type": "string", "description": "Human-readable dimension name in Chinese"},
+          "status": {"type": "string", "enum": ["found", "empty", "skipped"]},
+          "n":      {"type": "integer", "minimum": 0},
+          "note":   {"type": ["string", "null"],
+                     "description": "Required when status != found. Explain why."}
+        }
+      }
+    },
+    "notices": {
+      "type": "array",
+      "description": "Top-level soft warnings (e.g. whitelist compliance, stale canonical sources). Rendered in a yellow notice bar at the top of the report.",
+      "items": {"type": "string"}
+    },
+    "projects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "summary"],
+        "properties": {
+          "id":       {"type": "string"},
+          "name":     {"type": "string"},
+          "summary":  {"type": "string"},
+          "domain":   {"type": "string"},
+          "current_stack": {
+            "type": "object",
+            "properties": {
+              "models":     {"type": "array", "items": {"type": "string"}},
+              "vendors":    {"type": "array", "items": {"type": "string"}},
+              "frameworks": {"type": "array", "items": {"type": "string"}},
+              "regions":    {"type": "array", "items": {"type": "string"},
+                             "description": "e.g. ['China: Qwen-3.5', 'Overseas: GPT-4o']"},
+              "sources":    {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "keywords": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "articles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "url", "source", "published", "summary", "category", "score", "impacts"],
+        "properties": {
+          "title":     {"type": "string"},
+          "url":       {"type": "string"},
+          "source":    {"type": "string"},
+          "published": {"type": "string"},
+          "lang":      {"type": "string"},
+          "summary":   {"type": "string"},
+          "category":  {"type": "string",
+                        "enum": ["模型发布", "论文", "工具", "政策", "应用", "观点", "退役预警"]},
+          "score":     {"type": "integer", "minimum": 0, "maximum": 10},
+          "verified_at": {"type": ["string", "null"],
+                          "description": "Date the agent verified the URL was reachable (YYYY-MM-DD)"},
+          "link_status": {"type": ["string", "null"],
+                          "enum": ["ok", "broken", "unchecked", null],
+                          "description": "Set by verify_sources.py"},
+          "impacts": {
+            "type": "object",
+            "description": "Keys MUST be project ids. Value is null (irrelevant) or an object with the 3-field business breakdown.",
+            "additionalProperties": {
+              "oneOf": [
+                {"type": "null"},
+                {
+                  "type": "object",
+                  "required": ["what_happened", "business_impact"],
+                  "properties": {
+                    "what_happened":    {"type": "string",
+                                          "description": "1 sentence, plain-language, what the news actually is"},
+                    "business_impact":  {"type": "string",
+                                          "description": "2-4 sentences, business-owner voice, first-person '咱们…', what it means for THIS project"},
+                    "action_items":     {"type": "array", "items": {"type": "string"},
+                                          "description": "3-6 short imperative actions, each ≤ 20 chars"},
+                    "tech_detail":      {"type": ["string", "null"],
+                                          "description": "Optional: engineering-level notes, folded by default in HTML"},
+                    "grounded_on":      {"type": ["string", "null"]},
+                    "same_ecosystem":   {"type": ["boolean", "null"]}
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

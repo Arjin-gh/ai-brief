@@ -1,0 +1,49 @@
+{
+  "period": {"start": "2026-07-06", "end": "2026-07-13", "type": "weekly"},
+  "projects": [
+    {
+      "id": "acme-support",
+      "name": "Acme Support Assistant",
+      "summary": "示例项目：一个面向 SaaS 客服的多轮智能体，覆盖 FAQ 问答、工单创建、退款申请三个 Use Case。演示 ai-brief 如何在多语言 / 多模型部署下追踪外部动态。",
+      "domain": "客服 / 多轮对话智能体",
+      "current_stack": {
+        "models":     ["Qwen-3.5", "GPT-4o"],
+        "vendors":    ["阿里云 DashScope", "Azure OpenAI"],
+        "frameworks": ["LangChain", "自研 Supervisor + Router"],
+        "regions":    ["中国区：Qwen-3.5（阿里云 DashScope）", "海外区：GPT-4o（Azure OpenAI）"],
+        "sources":    ["projects/acme-support/stack.md"]
+      },
+      "keywords": ["multi-turn dialogue", "query rewrite", "intent clarification",
+                   "GPT-4o migration", "Qwen 3.5", "customer support chatbot"]
+    }
+  ],
+  "articles": [
+    {
+      "title": "⚠️ GPT-4o 所有版本将于 2026-10-01 停止服务，官方推荐迁移到 GPT-5.1",
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-retirement-schedule",
+      "source": "Microsoft Azure Foundry",
+      "published": "2026-07-09",
+      "lang": "en",
+      "summary": "Azure Foundry 官方退役日历显示 gpt-4o 全部版本（2024-05-13 / 2024-08-06 / 2024-11-20）于 2026-10-01 停用，官方推荐替代为 gpt-5.1。gpt-4o-mini 同日停用，替代为 gpt-4.1-mini。",
+      "category": "退役预警",
+      "score": 10,
+      "verified_at": "2026-07-13",
+      "link_status": "ok",
+      "impacts": {
+        "acme-support": {
+          "what_happened": "OpenAI 官方宣布 GPT-4o 全部版本将于 2026-10-01 停止服务，Azure 推荐迁移到 GPT-5.1。",
+          "business_impact": "示例项目的海外区客服 Agent 用的就是 GPT-4o。距停服只剩 80 天，如果不迁移，10 月 1 日起海外用户点开客服将收到接口错误。中国区 Qwen-3.5 不受影响。",
+          "action_items": [
+            "本周启动 GPT-5.1 兼容测试",
+            "8 月中完成灰度切流",
+            "同步采购 API 额度",
+            "准备回滚方案"
+          ],
+          "tech_detail": "Azure 已上线 gpt-5.1 (2025-11-13, GA to 2027-05-15)。tool_choice 语义与 GPT-4o 一致；上下文窗口从 128k 提升。评测应覆盖高歧义政策场景与 Query Rewrite 准确率基线。",
+          "grounded_on": "projects/acme-support/stack.md（海外区当前用 GPT-4o）",
+          "same_ecosystem": true
+        }
+      }
+    }
+  ]
+}

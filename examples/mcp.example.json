@@ -1,0 +1,44 @@
+{
+  "$comment": "ai-brief 推荐的 MCP 服务器配置样板。把本文件内容合并到 ~/.claude/settings.json（Claude Code）或对应 agent 的 MCP 配置文件里，然后 restart agent，agent 就能通过这些 MCP 拉取更丰富、更新鲜的 AI 情报源。",
+
+  "$note_1": "这里只列一些常用的 Web Search 类 MCP。你可以按自己有的 API key 三选一（或多选）；也可以直接用 Brave 或 DuckDuckGo，不需要 key。",
+
+  "mcpServers": {
+
+    "brave-search": {
+      "$comment": "Brave Search MCP · 高质量搜索，免费额度大。到 https://brave.com/search/api/ 拿 API key。",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "<你的 Brave API key>"
+      }
+    },
+
+    "tavily": {
+      "$comment": "Tavily MCP · AI-native 搜索，返回结构化答案。每月 1000 次免费。https://tavily.com",
+      "command": "npx",
+      "args": ["-y", "tavily-mcp"],
+      "env": {
+        "TAVILY_API_KEY": "<你的 Tavily API key>"
+      }
+    },
+
+    "exa": {
+      "$comment": "Exa MCP · 语义搜索、找相似页面强项。https://exa.ai",
+      "command": "npx",
+      "args": ["-y", "exa-mcp-server"],
+      "env": {
+        "EXA_API_KEY": "<你的 Exa API key>"
+      }
+    },
+
+    "fetch": {
+      "$comment": "官方 fetch MCP · 抓任意公开 URL 的正文（比内置 WebFetch 更少受限）。无需 key。",
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    }
+
+  },
+
+  "$note_2": "配置完后，用户在 agent 会话里对 agent 说：'请查看当前挂载的 MCP servers'——它会列出以上服务。然后 SKILL.md 里 Step 3 的搜索行为，agent 会自动优先用这些 MCP 而不是内置 WebSearch。"
+}

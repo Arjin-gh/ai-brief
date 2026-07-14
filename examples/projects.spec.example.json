@@ -1,0 +1,32 @@
+{
+  "$comment": "ai-brief 项目输入 spec 示例。inputs 支持 2 种类型：本地文件夹路径、公开 URL。认证 URL（SharePoint/Confluence/Notion/飞书 等）请下载到本地文件夹后作为 folder 输入，或让 agent 用相应 MCP 抓下来存到 work/downloads/ 下作为 folder 输入。",
+
+  "projects": [
+    {
+      "$comment_1": "示例 1 · 纯本地",
+      "id": "acme-support",
+      "name": "Acme Support Assistant",
+      "inputs": [
+        "./projects/acme-support"
+      ]
+    },
+    {
+      "$comment_2": "示例 2 · 本地主 + 公开 URL 补充。公开 URL 由 parse_docs.py 自己 fetch。",
+      "id": "acme-support-with-refs",
+      "name": "Acme Support + External Refs",
+      "inputs": [
+        "./projects/acme-support",
+        "https://arxiv.org/abs/2607.09876",
+        "https://en.wikipedia.org/wiki/Retrieval-augmented_generation"
+      ]
+    },
+    {
+      "$comment_3": "示例 3 · URL-only 项目（inputs 全是 URL 时，name 必填）。若这里的 URL 需要认证，parse_docs 会报 auth_required，请改成本地文件夹输入。",
+      "id": "onboarding-bsr",
+      "name": "Onboarding BSR",
+      "inputs": [
+        "./work/downloads/onboarding-bsr"
+      ]
+    }
+  ]
+}
