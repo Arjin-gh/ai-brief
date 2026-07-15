@@ -173,12 +173,42 @@ def _project_names_short(brief: dict) -> str:
     """Compact project name string for <title> and hero."""
     names = [p.get("name") or p.get("id") for p in brief.get("projects", [])]
     if not names:
-        return "AI 情报周报"
+        return _brief_kind_label(brief)
     if len(names) == 1:
         return names[0]
     if len(names) == 2:
         return " · ".join(names)
     return f"{names[0]} 等 {len(names)} 个项目"
+
+
+def _brief_kind_label(brief: dict) -> str:
+    """Long form of the brief type, used as hero H1 (with project names)."""
+    ptype = (brief.get("period") or {}).get("type") or "monthly"
+    if ptype == "weekly":
+        return "AI 情报周报"
+    if ptype == "custom":
+        return "AI 情报报告"
+    return "AI 情报月报"
+
+
+def _brief_kind_short(brief: dict) -> str:
+    """Short form for <title> tag and Hero eyebrow tag."""
+    ptype = (brief.get("period") or {}).get("type") or "monthly"
+    if ptype == "weekly":
+        return "AI 周报"
+    if ptype == "custom":
+        return "AI 情报报告"
+    return "AI 月报"
+
+
+def _brief_kind_eyebrow(brief: dict) -> str:
+    """EN eyebrow tag above the H1 (e.g. 'AI Monthly Brief · 项目专属情报')."""
+    ptype = (brief.get("period") or {}).get("type") or "monthly"
+    if ptype == "weekly":
+        return "AI Weekly Brief · 项目专属情报"
+    if ptype == "custom":
+        return "AI Brief · 项目专属情报"
+    return "AI Monthly Brief · 项目专属情报"
 
 
 def _project_slug(brief: dict) -> str:
@@ -231,6 +261,9 @@ def render(brief_path: Path, output_path: Path | None) -> Path:
     tpl = env.get_template("report.html")
 
     project_names = _project_names_short(brief)
+    brief_kind_short = _brief_kind_short(brief)
+    brief_kind_label = _brief_kind_label(brief)
+    brief_kind_eyebrow = _brief_kind_eyebrow(brief)
 
     html = tpl.render(
         brief=brief,
@@ -243,6 +276,9 @@ def render(brief_path: Path, output_path: Path | None) -> Path:
         coverage=brief.get("coverage") or [],
         total_articles=len(articles),
         project_names=project_names,
+        brief_kind_short=brief_kind_short,
+        brief_kind_label=brief_kind_label,
+        brief_kind_eyebrow=brief_kind_eyebrow,
         generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
     )
 

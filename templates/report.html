@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>{{ project_names }} · AI 周报 · {{ brief.period.end }}</title>
+<title>{{ project_names }} · {{ brief_kind_short }} · {{ brief.period.end }}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root {
@@ -703,8 +703,8 @@
 
   <!-- ==================== 1. HERO ==================== -->
   <section class="hero">
-    <span class="hero-tag">AI Weekly Brief · 项目专属情报</span>
-    <h1>{{ project_names }} · AI 情报周报</h1>
+    <span class="hero-tag">{{ brief_kind_eyebrow }}</span>
+    <h1>{{ project_names }} · {{ brief_kind_label }}</h1>
     <div class="hero-subtitle">
       本期从公开 AI 动态中筛选出 <strong>{{ total_articles }}</strong> 条与项目相关的信息，按业务视角解读。
     </div>
