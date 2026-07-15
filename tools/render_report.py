@@ -173,7 +173,7 @@ def _project_names_short(brief: dict) -> str:
     """Compact project name string for <title> and hero."""
     names = [p.get("name") or p.get("id") for p in brief.get("projects", [])]
     if not names:
-        return _brief_kind_label(brief)
+        return "AI_BRIEF"
     if len(names) == 1:
         return names[0]
     if len(names) == 2:
@@ -181,34 +181,71 @@ def _project_names_short(brief: dict) -> str:
     return f"{names[0]} 等 {len(names)} 个项目"
 
 
-def _brief_kind_label(brief: dict) -> str:
-    """Long form of the brief type, used as hero H1 (with project names)."""
+def _period_days(brief: dict) -> int:
+    from datetime import date
+    p = brief.get("period", {})
+    try:
+        s = date.fromisoformat(p["start"])
+        e = date.fromisoformat(p["end"])
+        return max(1, (e - s).days)
+    except Exception:
+        return 0
+
+
+def _cadence_en(brief: dict) -> str:
+    """English cadence word for weekly/monthly, empty for custom."""
+    ptype = (brief.get("period") or {}).get("type") or "monthly"
+    return {"weekly": "Weekly", "monthly": "Monthly"}.get(ptype, "")
+
+
+def _sub_window_label(brief: dict) -> str:
+    """Sub-headline window label. Fixed 7/30 for weekly/monthly, computed for custom."""
     ptype = (brief.get("period") or {}).get("type") or "monthly"
     if ptype == "weekly":
-        return "AI 情报周报"
-    if ptype == "custom":
-        return "AI 情报报告"
-    return "AI 情报月报"
+        return "7 天窗口"
+    if ptype == "monthly":
+        return "30 天窗口"
+    return f"{_period_days(brief)} 天窗口"
 
 
-def _brief_kind_short(brief: dict) -> str:
-    """Short form for <title> tag and Hero eyebrow tag."""
-    ptype = (brief.get("period") or {}).get("type") or "monthly"
-    if ptype == "weekly":
-        return "AI 周报"
-    if ptype == "custom":
-        return "AI 情报报告"
-    return "AI 月报"
+CATEGORY_CLASS = {
+    "退役预警": "alert",
+    "政策": "policy",
+    "模型发布": "model",
+    "应用": "app",
+    "观点": "opinion",
+    "论文": "paper",
+    "工具": "tool",
+}
 
 
-def _brief_kind_eyebrow(brief: dict) -> str:
-    """EN eyebrow tag above the H1 (e.g. 'AI Monthly Brief · 项目专属情报')."""
-    ptype = (brief.get("period") or {}).get("type") or "monthly"
-    if ptype == "weekly":
-        return "AI Weekly Brief · 项目专属情报"
-    if ptype == "custom":
-        return "AI Brief · 项目专属情报"
-    return "AI Monthly Brief · 项目专属情报"
+def _apply_category_class(articles: list[dict]) -> None:
+    for a in articles:
+        a["category_class"] = CATEGORY_CLASS.get(a.get("category", ""), "")
+
+
+def _editors_headline(brief: dict, total: int, top_n: int) -> str:
+    return f"本期 {total} 条与项目相关的信息，先看这 {top_n} 条最重要的。"
+
+
+def _load_filtering_stats(brief_path: Path) -> dict | None:
+    """Read candidates.json next to brief.json, extract pipeline stats. Optional."""
+    cand = brief_path.parent / "candidates.json"
+    if not cand.exists():
+        return None
+    try:
+        stats = json.loads(cand.read_text(encoding="utf-8")).get("stats") or {}
+        return {
+            "raw_hits":       stats.get("total_raw_hits_all_dims", 0),
+            "dropped":        stats.get("dropped_out_of_period", 0),
+            "in_period":      stats.get("in_period_from_search", 0),
+            "canonical_seed": stats.get("canonical_seeded_bypassing_period", 0),
+            "final":          stats.get("final_candidates_count", 0),
+            "cap":            stats.get("max_candidates_for_impact", 15),
+            "cap_applied":    stats.get("cap_applied", False),
+        }
+    except Exception:
+        return None
 
 
 def _project_slug(brief: dict) -> str:
@@ -246,39 +283,33 @@ def render(brief_path: Path, output_path: Path | None) -> Path:
     _normalize_impacts(brief)
     articles = _sorted_articles(brief)
     _assign_anchors(articles)
-    project_stats = _project_stats(brief)
-    urgent_articles = [a for a in articles if a.get("urgent")]
+    _apply_category_class(articles)
     top = _top_articles(articles, TL_DR_MAX)
     for t in top:
         t["_tldr_line"] = _tldr_line(t)
-    article_groups = _group_articles(articles)
 
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
         autoescape=select_autoescape(["html"]),
     )
-    env.filters["fmt_stack"] = _fmt_stack
     tpl = env.get_template("report.html")
 
     project_names = _project_names_short(brief)
-    brief_kind_short = _brief_kind_short(brief)
-    brief_kind_label = _brief_kind_label(brief)
-    brief_kind_eyebrow = _brief_kind_eyebrow(brief)
+    project_names_by_id = {p["id"]: p.get("name", p["id"]) for p in brief.get("projects", [])}
+    filtering_stats = _load_filtering_stats(brief_path)
 
     html = tpl.render(
         brief=brief,
         articles=articles,
-        article_groups=article_groups,
         top_articles=top,
-        project_stats=project_stats,
-        urgent_articles=urgent_articles,
-        canonical=brief.get("canonical") or [],
         coverage=brief.get("coverage") or [],
         total_articles=len(articles),
         project_names=project_names,
-        brief_kind_short=brief_kind_short,
-        brief_kind_label=brief_kind_label,
-        brief_kind_eyebrow=brief_kind_eyebrow,
+        project_names_by_id=project_names_by_id,
+        cadence_en=_cadence_en(brief),
+        sub_window_label=_sub_window_label(brief),
+        editors_headline=_editors_headline(brief, len(articles), len(top)),
+        filtering_stats=filtering_stats,
         generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
     )
 
