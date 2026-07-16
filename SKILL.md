@@ -33,7 +33,7 @@ Every recommendation must respect the project's current stack.
 
 - Write in first-person Chinese ("咱们…", "我们的员工…") — sound like an internal colleague, not a report.
 - Avoid jargon. If you must use a technical term, add a short parenthetical explanation.
-- Every `impact` MUST be split into three plain-language fields (see §5 impact schema).
+- Every `impact` MUST be split into three plain-language fields (see §4 Step 4 impact schema).
 - Every `action_items` entry ≤ 20 characters, imperative verb first ("本月内启动兼容测试", not "考虑评估一下兼容性方面的工作").
 - Put engineering-level nuance into `tech_detail` — the HTML folds it under a click-to-expand.
 
@@ -394,10 +394,32 @@ Tell the user the output path when done.
 
 ## 5 · Handling user feedback
 
-**Localized patch** — user says "把第 3 条对 acme-support 的建议改成 GPT-5.5":
-1. Open `work/brief.json`, find the article, edit `impacts.acme-support.business_impact` / `action_items` / `tech_detail`.
-2. Do NOT re-search, do NOT touch other cards.
-3. Re-run `verify_sources.py` + `validate_brief.py` + `render_report.py`.
+**Localized patch** — 语气 / 侧重 / 长短 / 白话度微调（**不动来源**）
+
+- 触发话术样例：
+  - "第 3 条对咱们不算重点，写淡一点"
+  - "把 action_items 缩短"
+  - "第 N 条讲得再白话点"
+  - "把技术细节折叠掉"
+- 处理流程：
+  1. Open `work/brief.json`, find the article, edit `impacts.<project>.business_impact` / `action_items` / `tech_detail`（"讲白话点"时把技术细节挪进 `tech_detail`，`business_impact` 只留白话）。
+  2. **Do NOT re-search, do NOT touch `url` / `title` / `source` / `published` / `summary`，do NOT touch other cards.**
+  3. Re-run `verify_sources.py` + `validate_brief.py` + `render_report.py`.
+
+**Targeted refresh** — 换推荐目标 / 换更贴合的原始来源（**允许窄搜索**）
+
+- 触发话术样例（任一命中即走这条，不要走 Localized patch）：
+  - "把推荐从 GPT-5 **改成** GPT-5.5" / "**换成** Qwen-4" / "**替换成** Anthropic 方案"
+  - "找**条更相关**的原始新闻" / "**换个源**"
+  - "别用 GPT，**用** Qwen"
+- 处理流程：
+  1. 围绕新目标做**一次窄搜索**（1–2 个 query，只服务这一张卡片；**不要**重跑 Step 3 全流程、也不要动别的 article）。
+  2. 找到贴合的新 URL → 覆盖 `article.url` / `title` / `source` / `published` / `summary`。
+  3. 相应重写 `impacts.<project>.business_impact` / `action_items` / `tech_detail`，保证推荐目标与新 URL 内容自洽（点进去看得到）。
+  4. Re-run `verify_sources.py` + `validate_brief.py` + `render_report.py`（新 URL 会走 HEAD-check，坏链自动标红）。
+  5. 汇报一句："已把第 X 条链接从 `<old>` 换成 `<new>`，因为 `<一句原因>`"。让用户看得见你做了什么。
+
+**触发词不明显时反问用户**（例："这条我不太满意"、"改一下这条"、"这条重写下"）——不要默认走任何一条。反问一句："你是想调语气/侧重，还是换推荐目标 / 换个原始来源？"让用户自己选，避免误伤 URL 或漏改内容。
 
 **Persistent preference** — user says "以后都推 GPT 系":
 1. Do NOT create a separate preferences file.
@@ -409,11 +431,6 @@ Tell the user the output path when done.
    - 部署：私有云 + Azure OpenAI
    ```
 3. Next run reads it automatically.
-
-**Too technical** — user says "把第 N 条讲得再白话点":
-1. Rewrite `business_impact` and `action_items` in plainer Chinese.
-2. Move technical nuance into `tech_detail`.
-3. Re-render.
 
 ---
 
